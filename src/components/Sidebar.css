@@ -1,0 +1,167 @@
+/* Sidebar.css */
+/* Aggiungi all'inizio di Sidebar.css */
+.sidebar {
+  width: 280px;
+  background: white;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  -webkit-app-region: no-drag; /* Non trascinabile */
+}
+
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  -webkit-app-region: drag; /* Solo l'header è trascinabile */
+}
+
+/* Tutti gli elementi interattivi non sono trascinabili */
+.shortcode-item,
+.sidebar-button,
+button,
+input,
+select {
+  -webkit-app-region: no-drag;
+}
+
+.sidebar-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.version {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.category-group {
+  margin-bottom: 20px;
+}
+
+.category-header {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.category-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.shortcode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shortcode-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+  position: relative;
+}
+
+.shortcode-item:hover {
+  background: var(--light);
+  border-color: var(--border);
+  transform: translateX(2px);
+}
+
+.shortcode-item.active {
+  background: var(--light);
+  border-color: var(--item-color, var(--primary));
+  border-left-width: 3px;
+}
+
+.shortcode-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--item-color, var(--primary));
+  border-radius: 0 3px 3px 0;
+}
+
+.shortcode-icon {
+  font-size: 20px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shortcode-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shortcode-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.shortcode-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+
+.sidebar-button {
+  flex: 1;
+  padding: 8px;
+  background: var(--light);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--text);
+}
+
+.sidebar-button:hover {
+  background: white;
+  border-color: var(--primary);
+  color: var(--primary);
+}

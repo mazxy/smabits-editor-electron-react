@@ -1,0 +1,114 @@
+/* OutputPanel.css */
+.output-panel {
+  width: 350px;
+  background: #f7fafc;
+  border-left: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.output-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.shortcode-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shortcode-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.shortcode-item.selected {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.shortcode-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.shortcode-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shortcode-type {
+  font-size: 11px;
+  font-weight: 600;
+  background: #667eea;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.shortcode-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.shortcode-time {
+  font-size: 11px;
+  color: #718096;
+}
+
+.shortcode-preview {
+  margin-bottom: 8px;
+  padding: 8px;
+  background: #f7fafc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.shortcode-preview code {
+  font-size: 11px;
+  color: #718096;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.shortcode-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.action-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.action-btn:hover {
+  background: white;
+  border-color: #667eea;
+}
+
+.action-delete:hover {
+  border-color: #f56565;
+  color: #f56565;
+}
