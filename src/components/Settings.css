@@ -28,6 +28,7 @@
   background: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   -webkit-app-region: drag;
+  flex-shrink: 0;
 }
 
 .settings-title {
@@ -76,6 +77,7 @@
   flex: 1;
   display: flex;
   overflow: hidden;
+  min-height: 0;
 }
 
 /* Sidebar Navigation */
@@ -84,6 +86,8 @@
   background: #f7fafc;
   border-right: 1px solid #e2e8f0;
   padding: 20px 12px;
+  overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .settings-nav {
@@ -135,11 +139,16 @@
   flex: 1;
   overflow-y: auto;
   padding: 30px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .settings-panel {
-  max-width: 800px;
-  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .settings-panel h3 {
@@ -147,6 +156,7 @@
   font-weight: 600;
   color: #2d3748;
   margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .settings-description {
@@ -154,6 +164,7 @@
   color: #718096;
   margin-bottom: 30px;
   line-height: 1.5;
+  flex-shrink: 0;
 }
 
 /* Settings Sections */
@@ -266,11 +277,202 @@
   border-top: 1px solid #e2e8f0;
   background: white;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
 }
 
 .settings-footer-actions {
   display: flex;
   gap: 12px;
+}
+
+/* Server Section Styles */
+.server-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.server-panel > h3,
+.server-panel > .settings-description {
+  flex-shrink: 0;
+}
+
+.server-container {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.server-left {
+  flex: 0 0 45%;
+  max-width: 500px;
+  min-width: 350px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.server-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.server-left .settings-section,
+.server-right .settings-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.connection-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.connection-form .form-group {
+  margin-bottom: 0;
+}
+
+.connection-form .form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 6px;
+}
+
+.connection-form .form-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+  background: white;
+}
+
+.connection-form .form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.connection-form .form-input:disabled {
+  background: #f7fafc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.connection-actions {
+  margin-top: 20px;
+}
+
+.connection-status {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.connection-status.connecting {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #c05621;
+}
+
+.connection-status.connected {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+.connection-status.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.status-icon {
+  font-size: 18px;
+}
+
+/* Terminal Section */
+.terminal-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.terminal-section h4 {
+  flex-shrink: 0;
+}
+
+.terminal-window {
+  flex: 1;
+  background: #1a202c;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-y: auto;
+  min-height: 0;
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-output {
+  color: #10b981;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.terminal-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  text-align: center;
+  min-height: 200px;
+}
+
+.terminal-empty .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.terminal-empty p {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #94a3b8;
+}
+
+.terminal-empty .empty-hint {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* Form Utilities */
+.required {
+  color: #ef4444;
+  margin-left: 2px;
 }
 
 /* Animations */
@@ -299,6 +501,22 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .server-container {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .server-left {
+    flex: 1;
+    max-width: none;
+  }
+  
+  .terminal-window {
+    min-height: 300px;
+  }
+}
+
 @media (max-width: 768px) {
   .settings-sidebar {
     width: 200px;
