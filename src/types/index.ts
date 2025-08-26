@@ -75,6 +75,7 @@ export interface AppState {
 }
 
 // Electron API types
+// Electron API types
 export interface ElectronAPI {
   getStoreValue: (key: string) => Promise<any>;
   setStoreValue: (key: string, value: any) => Promise<void>;
@@ -84,6 +85,16 @@ export interface ElectronAPI {
   showOpenDialog: (options: any) => Promise<any>;
   onMenuAction: (callback: (event: string, data?: any) => void) => void;
   removeAllListeners: () => void;
+  // SSH API
+  sshConnect: (config: { host: string; port: string; username: string; password: string }) => Promise<{
+    success: boolean;
+    message?: string;
+    systemInfo?: string;
+    error?: string;
+  }>;
+  sshDisconnect: () => Promise<{ success: boolean; error?: string }>;
+  sshExecute: (command: string) => Promise<{ success: boolean; output?: string; error?: string }>;
+  sshCheckConnection: () => Promise<{ connected: boolean }>;
 }
 
 declare global {

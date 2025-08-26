@@ -24,6 +24,7 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
   const [connectionMessage, setConnectionMessage] = useState<string>('');
   const [serverResponse, setServerResponse] = useState<string>('');
+  const [useSimulation, setUseSimulation] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
@@ -31,32 +32,114 @@ const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
     setConnectionStatus('connecting');
     setConnectionMessage('Connessione in corso...');
     
-    // Simula la connessione SSH (in un'app reale, questo chiamerebbe l'API Electron)
-    setTimeout(() => {
-      if (serverConnection.host && serverConnection.username && serverConnection.password) {
-        setConnectionStatus('connected');
-        setConnectionMessage(`Connesso a ${serverConnection.username}@${serverConnection.host}:${serverConnection.port}`);
-        setServerResponse(`SSH Connection established to ${serverConnection.host}
+    if (useSimulation) {
+      // Modalità simulata
+      setTimeout(() => {
+        if (serverConnection.host && serverConnection.username && serverConnection.password) {
+          setConnectionStatus('connected');
+          setConnectionMessage(`[SIMULATO] Connesso a ${serverConnection.username}@${serverConnection.host}:${serverConnection.port}`);
+          setServerResponse(`[SIMULATION MODE]
+SSH Connection established to ${serverConnection.host}
 Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-91-generic x86_64)
 
  * Documentation:  https://help.ubuntu.com
  * Management:     https://landscape.canonical.com
  * Support:        https://ubuntu.com/advantage
 
+System information:
+- Hostname: ${serverConnection.host}
+- User: ${serverConnection.username}
+- Time: ${new Date().toLocaleString()}
+- Directory: /home/${serverConnection.username}
+
 Last login: ${new Date().toLocaleString()}
 ${serverConnection.username}@server:~$ `);
-      } else {
+        } else {
+          setConnectionStatus('error');
+          setConnectionMessage('[SIMULATO] Errore: Compila tutti i campi richiesti');
+          setServerResponse('');
+        }
+      }, 1500);
+    } else {
+      // Modalità reale - Connessione SSH vera
+      try {
+        if (!window.electronAPI) {
+          setConnectionStatus('error');
+          setConnectionMessage('Errore: API Electron non disponibile');
+          return;
+        }
+
+        const result = await window.electronAPI.sshConnect({
+          host: serverConnection.host,
+          port: serverConnection.port,
+          username: serverConnection.username,
+          password: serverConnection.password
+        });
+
+        if (result.success) {
+          setConnectionStatus('connected');
+          setConnectionMessage(`Connesso a ${serverConnection.username}@${serverConnection.host}:${serverConnection.port}`);
+          
+          // Formatta l'output del sistema
+          if (result.systemInfo) {
+            const parts = result.systemInfo.split('---').map((s: string) => s.trim());
+            const [system = 'N/A', user = 'N/A', pwd = 'N/A', date = 'N/A'] = parts;
+            setServerResponse(`SSH Connection established to ${serverConnection.host}
+=====================================
+System: ${system}
+User: ${user}
+Working Directory: ${pwd}
+Connection Time: ${date}
+=====================================
+
+${serverConnection.username}@${serverConnection.host}:${pwd}$ `);
+          } else {
+            setServerResponse(`SSH Connection established to ${serverConnection.host}
+=====================================
+Connected successfully
+=====================================
+
+${serverConnection.username}@${serverConnection.host}:~$ `);
+          }
+        } else {
+          setConnectionStatus('error');
+          setConnectionMessage(`Errore: ${result.error}`);
+          setServerResponse('');
+        }
+      } catch (error: any) {
         setConnectionStatus('error');
-        setConnectionMessage('Errore: Compila tutti i campi richiesti');
+        setConnectionMessage(`Errore di connessione: ${error.message || 'Errore sconosciuto'}`);
         setServerResponse('');
       }
-    }, 1500);
+    }
   };
 
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
+    if (!useSimulation && window.electronAPI) {
+      await window.electronAPI.sshDisconnect();
+    }
     setConnectionStatus('idle');
     setConnectionMessage('');
     setServerResponse('');
+  };
+
+  const handleExecuteCommand = async (command: string) => {
+    if (connectionStatus !== 'connected') return;
+    
+    if (useSimulation) {
+      // Simula output comando
+      setServerResponse(prev => prev + `\n$ ${command}\n[Simulated output for: ${command}]\n${serverConnection.username}@server:~$ `);
+    } else {
+      // Esegui comando reale
+      if (window.electronAPI) {
+        const result = await window.electronAPI.sshExecute(command);
+        if (result.success) {
+          setServerResponse(prev => prev + `\n$ ${command}\n${result.output}\n${serverConnection.username}@server:~$ `);
+        } else {
+          setServerResponse(prev => prev + `\n$ ${command}\nError: ${result.error}\n${serverConnection.username}@server:~$ `);
+        }
+      }
+    }
   };
 
   const renderContent = () => {
@@ -112,6 +195,26 @@ ${serverConnection.username}@server:~$ `);
               <div className="server-left">
                 <div className="settings-section">
                   <h4>🔒 Connessione SSH</h4>
+                  
+                  {/* Toggle modalità simulazione */}
+                  <div className="simulation-toggle">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={useSimulation}
+                        onChange={(e) => {
+                          setUseSimulation(e.target.checked);
+                          if (connectionStatus === 'connected') {
+                            handleDisconnect();
+                          }
+                        }}
+                      />
+                      <span>🎮 Modalità Simulazione</span>
+                    </label>
+                    <span className="simulation-hint">
+                      {useSimulation ? 'Connessione simulata per testing' : 'Connessione SSH reale'}
+                    </span>
+                  </div>
                   
                   <div className="connection-form">
                     <div className="form-group">
@@ -205,13 +308,53 @@ ${serverConnection.username}@server:~$ `);
                       </div>
                     )}
                   </div>
+
+                  {/* Quick Commands (solo quando connesso) */}
+                  {connectionStatus === 'connected' && (
+                    <div className="quick-commands">
+                      <h5>Comandi Rapidi</h5>
+                      <div className="command-buttons">
+                        <button 
+                          className="cmd-btn"
+                          onClick={() => handleExecuteCommand('ls -la')}
+                          title="Lista file"
+                        >
+                          📁 ls
+                        </button>
+                        <button 
+                          className="cmd-btn"
+                          onClick={() => handleExecuteCommand('pwd')}
+                          title="Directory corrente"
+                        >
+                          📍 pwd
+                        </button>
+                        <button 
+                          className="cmd-btn"
+                          onClick={() => handleExecuteCommand('df -h')}
+                          title="Spazio disco"
+                        >
+                          💾 df
+                        </button>
+                        <button 
+                          className="cmd-btn"
+                          onClick={() => handleExecuteCommand('top -n 1')}
+                          title="Processi"
+                        >
+                          📊 top
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Pannello destro - Terminal/Response */}
               <div className="server-right">
                 <div className="settings-section terminal-section">
-                  <h4>📟 Terminal Response</h4>
+                  <h4>
+                    📟 Terminal Response 
+                    {useSimulation && <span className="simulation-badge">SIMULAZIONE</span>}
+                  </h4>
                   <div className="terminal-window">
                     {serverResponse ? (
                       <pre className="terminal-output">{serverResponse}</pre>
@@ -220,7 +363,9 @@ ${serverConnection.username}@server:~$ `);
                         <span className="empty-icon">💻</span>
                         <p>In attesa di connessione...</p>
                         <span className="empty-hint">
-                          Inserisci i dati del server e premi Connetti
+                          {useSimulation ? 
+                            'Modalità simulazione attiva' : 
+                            'Inserisci i dati del server e premi Connetti'}
                         </span>
                       </div>
                     )}

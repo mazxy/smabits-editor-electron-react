@@ -46,6 +46,7 @@ function App() {
         window.electronAPI.removeAllListeners();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentProject, generatedShortcodes]);
 
   // Load recent projects on startup
@@ -203,23 +204,23 @@ function App() {
   const generateHTMLExport = () => {
     const codes = generatedShortcodes.map(s => s.code).join('\n\n');
     return `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>SMABITS Shortcodes Export</title>
-    <style>
-        body { font-family: 'Courier New', monospace; padding: 20px; background: #f5f5f5; }
-        pre { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        .timestamp { color: #666; font-size: 0.9em; }
-    </style>
-</head>
-<body>
-    <h1>SMABITS Shortcodes Export</h1>
-    <p class="timestamp">Esportato il: ${new Date().toLocaleString('it-IT')}</p>
-    <pre>${codes}</pre>
-</body>
-</html>`;
+              <html>
+              <head>
+                  <meta charset="UTF-8">
+                  <title>SMABITS Shortcodes Export</title>
+                  <style>
+                      body { font-family: 'Courier New', monospace; padding: 20px; background: #f5f5f5; }
+                      pre { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                      h1 { color: #333; }
+                      .timestamp { color: #666; font-size: 0.9em; }
+                  </style>
+              </head>
+              <body>
+                  <h1>SMABITS Shortcodes Export</h1>
+                  <p class="timestamp">Esportato il: ${new Date().toLocaleString('it-IT')}</p>
+                  <pre>${codes}</pre>
+              </body>
+              </html>`;
   };
 
   const updateRecentProjects = async (filepath: string) => {

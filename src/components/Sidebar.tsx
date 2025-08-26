@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShortcodeType } from '../types';
-import { shortcodeConfigs, shortcodeCategories } from '../config/shortcodes';
+import { shortcodeConfigs } from '../config/shortcodes';
 import './Sidebar.css';
 
 interface SidebarProps {

@@ -4,25 +4,37 @@ const path = require('path');
 const fs = require('fs').promises;
 const Store = require('electron-store');
 
+// Prova ad importare ssh2-promise, se non disponibile usa simulazione
+let SSH2Promise;
+let sshAvailable = false;
+try {
+  SSH2Promise = require('ssh2-promise');
+  sshAvailable = true;
+  console.log('SSH2Promise loaded successfully');
+} catch (err) {
+  console.log('SSH2Promise not available, SSH will be simulated');
+}
+
 const store = new Store();
 
 let mainWindow;
+let sshConnection = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1920,        // Full HD width
-    height: 1080,       // Full HD height
-    minWidth: 1400,     // Minimo più grande
-    minHeight: 800,     // Minimo più alto
+    width: 1920,
+    height: 1080,
+    minWidth: 1400,
+    minHeight: 800,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    trafficLightPosition: { x: 20, y: 20 }, // Posizione dei pulsanti macOS
+    trafficLightPosition: { x: 20, y: 20 },
     transparent: false,
-    frame: process.platform !== 'darwin', // Frame solo per Windows/Linux
+    frame: process.platform !== 'darwin',
     hasShadow: true,
     icon: path.join(__dirname, 'icon.png')
   });
@@ -169,25 +181,20 @@ function createWindow() {
   Menu.setApplicationMenu(menu);
 
   mainWindow.on('closed', () => {
+    if (sshConnection) {
+      try {
+        sshConnection.close();
+      } catch (err) {
+        console.log('Error closing SSH connection:', err);
+      }
+      sshConnection = null;
+    }
     mainWindow = null;
   });
 }
 
-app.whenReady().then(createWindow);
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.on('activate', () => {
-  if (mainWindow === null) {
-    createWindow();
-  }
-});
-
-// IPC Handlers
+// ===== REGISTRA GLI IPC HANDLERS =====
+// Store handlers
 ipcMain.handle('get-store-value', (event, key) => {
   return store.get(key);
 });
@@ -196,6 +203,7 @@ ipcMain.handle('set-store-value', (event, key, value) => {
   store.set(key, value);
 });
 
+// File handlers
 ipcMain.handle('save-file', async (event, { path: filePath, content }) => {
   try {
     await fs.writeFile(filePath, content, 'utf8');
@@ -214,6 +222,7 @@ ipcMain.handle('read-file', async (event, filePath) => {
   }
 });
 
+// Dialog handlers
 ipcMain.handle('show-save-dialog', async (event, options) => {
   const result = await dialog.showSaveDialog(mainWindow, options);
   return result;
@@ -222,4 +231,119 @@ ipcMain.handle('show-save-dialog', async (event, options) => {
 ipcMain.handle('show-open-dialog', async (event, options) => {
   const result = await dialog.showOpenDialog(mainWindow, options);
   return result;
+});
+
+// ===== SSH HANDLERS =====
+ipcMain.handle('ssh-connect', async (event, config) => {
+  console.log('SSH connect handler called with:', config);
+  
+  try {
+    // Se ssh2-promise non è disponibile, ritorna errore
+    if (!sshAvailable || !SSH2Promise) {
+      return {
+        success: false,
+        error: 'SSH module not installed. Please enable simulation mode or run: npm install ssh2-promise'
+      };
+    }
+
+    // Se c'è già una connessione, chiudila
+    if (sshConnection) {
+      try {
+        await sshConnection.close();
+      } catch (err) {
+        console.log('Error closing existing connection:', err);
+      }
+      sshConnection = null;
+    }
+
+    // Crea nuova connessione
+    sshConnection = new SSH2Promise({
+      host: config.host,
+      port: parseInt(config.port) || 22,
+      username: config.username,
+      password: config.password,
+      readyTimeout: 10000,
+      reconnect: false,
+      reconnectTries: 1,
+      reconnectDelay: 5000
+    });
+
+    // Connetti
+    await sshConnection.connect();
+    console.log('SSH connection established');
+    
+    // Ottieni informazioni del sistema
+    let systemInfo = '';
+    try {
+      systemInfo = await sshConnection.exec('uname -a && echo "---" && whoami && echo "---" && pwd && echo "---" && date');
+    } catch (err) {
+      console.log('Error getting system info:', err);
+      systemInfo = 'Connected successfully';
+    }
+    
+    return {
+      success: true,
+      message: 'Connesso con successo',
+      systemInfo: systemInfo
+    };
+  } catch (error) {
+    console.error('SSH connection error:', error);
+    return {
+      success: false,
+      error: error.message || 'Errore di connessione SSH'
+    };
+  }
+});
+
+ipcMain.handle('ssh-disconnect', async () => {
+  console.log('SSH disconnect handler called');
+  try {
+    if (sshConnection) {
+      await sshConnection.close();
+      sshConnection = null;
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('SSH disconnect error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('ssh-execute', async (event, command) => {
+  console.log('SSH execute handler called with command:', command);
+  try {
+    if (!sshConnection) {
+      return { success: false, error: 'Nessuna connessione SSH attiva' };
+    }
+    
+    const result = await sshConnection.exec(command);
+    return { success: true, output: result };
+  } catch (error) {
+    console.error('SSH execute error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('ssh-check-connection', async () => {
+  return { connected: sshConnection !== null };
+});
+
+console.log('SSH handlers registered');
+
+// ===== APP LIFECYCLE =====
+app.whenReady().then(() => {
+  createWindow();
+  console.log('App is ready, window created');
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (mainWindow === null) {
+    createWindow();
+  }
 });

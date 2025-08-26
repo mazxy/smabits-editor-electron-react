@@ -11,6 +11,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showSaveDialog: (options) => ipcRenderer.invoke('show-save-dialog', options),
   showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options),
   
+  // SSH operations
+  sshConnect: (config) => ipcRenderer.invoke('ssh-connect', config),
+  sshDisconnect: () => ipcRenderer.invoke('ssh-disconnect'),
+  sshExecute: (command) => ipcRenderer.invoke('ssh-execute', command),
+  sshCheckConnection: () => ipcRenderer.invoke('ssh-check-connection'),
+  
   // Menu events
   onMenuAction: (callback) => {
     const events = [
