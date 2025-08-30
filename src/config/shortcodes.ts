@@ -1,4 +1,8 @@
+
+
+
 import { ShortcodeConfig, ShortcodeType, ShortcodeFormData } from '../types';
+
 
 // Configurazione principale shortcode DEF con tutte le varianti
 export const defVariants = {

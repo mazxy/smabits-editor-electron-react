@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
-import FormPanel from './components/FormPanel';
+
 import OutputPanel from './components/OutputPanel';
 import PreviewPanel from './components/PreviewPanel';
 import StatusBar from './components/StatusBar';
@@ -9,13 +9,21 @@ import Settings from './components/Settings';
 import { ShortcodeType, ShortcodeFormData, GeneratedShortcode, Project } from './types';
 import { generateShortcode } from './config/shortcodes';
 
+import FormPanel from './components/editor/FormPanel/FormPanel';
+
 function App() {
   const [selectedType, setSelectedType] = useState<ShortcodeType>('def');
   const [generatedShortcodes, setGeneratedShortcodes] = useState<GeneratedShortcode[]>([]);
   const [selectedShortcodeIndex, setSelectedShortcodeIndex] = useState<number | null>(null);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
+
+   // isModified: booleano che indica se ci sono modifiche non salvate
+  // setIsModified: funzione per aggiornare il valore di isModified
+  // useState(false): valore iniziale false (nessuna modifica all'avvio)
   const [isModified, setIsModified] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+
 
   // Initialize electron menu listeners
   useEffect(() => {
@@ -232,18 +240,39 @@ function App() {
   };
 
   const handleGenerate = useCallback((formData: ShortcodeFormData) => {
+    console.log('handleGenerate chiamato');
+    console.log('selectedShortcodeIndex:', selectedShortcodeIndex);
+    console.log('generatedShortcodes:', generatedShortcodes);
+    
     const code = generateShortcode(formData);
-    const newShortcode: GeneratedShortcode = {
+    const shortcode: GeneratedShortcode = {
       code,
-      preview: code, // In a real app, this would be rendered LaTeX
+      preview: code,
       timestamp: Date.now(),
       formData
     };
     
-    setGeneratedShortcodes(prev => [...prev, newShortcode]);
-    setSelectedShortcodeIndex(generatedShortcodes.length);
+    const editingShortcode = selectedShortcodeIndex !== null 
+      ? generatedShortcodes[selectedShortcodeIndex] 
+      : undefined;
+    
+    console.log('editingShortcode:', editingShortcode);
+    
+    if (selectedShortcodeIndex !== null && editingShortcode) {
+      console.log('MODALITÀ EDITING');
+      setGeneratedShortcodes(prev => {
+        const updated = [...prev];
+        updated[selectedShortcodeIndex] = shortcode;
+        return updated;
+      });
+    } else {
+      console.log('MODALITÀ CREAZIONE');
+      setGeneratedShortcodes(prev => [...prev, shortcode]);
+      setSelectedShortcodeIndex(generatedShortcodes.length);
+    }
+    
     setIsModified(true);
-  }, [generatedShortcodes.length]);
+  }, [generatedShortcodes, selectedShortcodeIndex]);
 
   const handleDeleteShortcode = (index: number) => {
     setGeneratedShortcodes(prev => prev.filter((_, i) => i !== index));
@@ -255,6 +284,10 @@ function App() {
     const shortcode = generatedShortcodes[index];
     setSelectedType(shortcode.formData.type);
     setSelectedShortcodeIndex(index);
+  };
+
+  const handleCancelEdit = () => {
+    setSelectedShortcodeIndex(null);
   };
 
   return (
@@ -283,6 +316,7 @@ function App() {
                 shortcodeType={selectedType}
                 onGenerate={handleGenerate}
                 editingShortcode={selectedShortcodeIndex !== null ? generatedShortcodes[selectedShortcodeIndex] : undefined}
+                onCancelEdit={handleCancelEdit}
               />
               
               <OutputPanel
